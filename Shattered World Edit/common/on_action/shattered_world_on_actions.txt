@@ -1,0 +1,5 @@
+on_game_start_after_lobby = {
+	events = {
+		shattered_world.1
+	}
+}

@@ -1,0 +1,148 @@
+namespace = shattered_world
+
+shattered_world.1 = {
+	hidden = yes
+	type = empty
+	
+	trigger = {
+		NOT = {
+			has_game_rule = not_shattered
+		}
+	}
+	
+	immediate = {
+		if = {
+			limit = { has_game_rule = shatter_duchies }
+			every_ruler = { trigger_event = shattered_world.2 }
+		}
+		else_if = {
+			limit = { has_game_rule = shatter_kingdoms }
+			every_ruler = { trigger_event = shattered_world.3 }
+		}
+		else_if = {
+			limit = { has_game_rule = shatter_empires }
+			every_ruler = { trigger_event = shattered_world.4 }
+		}
+	}
+}
+
+shattered_world.2 = {
+	hidden = yes
+	type = character_event
+	
+	trigger = {
+		has_game_rule = shatter_duchies
+	}
+	
+	immediate = {
+	
+		every_held_title = {
+			limit = { 
+				OR = {
+					tier = tier_duchy 
+					tier = tier_kingdom 
+					tier = tier_empire 
+				}
+			}
+			holder = {
+				destroy_title = prev
+			}
+		}
+		trigger_event = shattered_world.5
+	}
+}
+
+shattered_world.3 = {
+	hidden = yes
+	type = character_event
+	
+	trigger = {
+		has_game_rule = shatter_kingdoms
+	}
+	
+	immediate = {
+		every_held_title = {
+			limit = {
+				OR = {
+					tier = tier_kingdom 
+					tier = tier_empire 
+				}
+			}
+			holder = {
+				destroy_title = prev
+			}
+		}
+	}
+}
+
+shattered_world.4 = {
+	hidden = yes
+	type = character_event
+	
+	trigger = {
+		has_game_rule = shatter_empires
+	}
+	
+	immediate = {
+		every_ruler = {
+			limit = { primary_title.tier = tier_empire }
+				every_held_title = {
+					limit = { tier = tier_empire }
+					holder = {
+						destroy_title = prev
+					}
+				}
+			}
+		}
+	}
+
+shattered_world.5 = {
+	hidden = no
+	type = character_event
+	
+	trigger = {
+		has_game_rule = shatter_duchies
+	}
+	
+	immediate = {
+		every_held_title = {
+			# Only counties, and not the capital_county
+			limit = { 
+				tier = tier_county
+				NOT = {
+					#this = root.capital_province.county
+					this = root.capital_county
+				}
+			}
+			
+			# Save the title
+			save_temporary_scope_as = countytogiveaway 
+			
+			# Create a character to take this title
+			create_character = {
+				employer = root
+				after_creation = {
+					save_temporary_scope_as = titletaker
+				}
+			}
+			
+			# create_title_and_vassal_change — Defines type of exchange, whether to add a claim, and a name for the scope of the change.
+			create_title_and_vassal_change = {
+				type = granted
+				save_scope_as = change
+				add_claim_on_loss = no
+			}
+			
+			# Perform the exchange
+			scope:countytogiveaway = {
+				change_title_holder = {
+					holder = scope:titletaker
+					change = scope:change
+				}
+			}
+			
+			# Resolve exchange
+			resolve_title_and_vassal_change = scope:change
+		}
+	}
+}
